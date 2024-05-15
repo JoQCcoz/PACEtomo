@@ -64,7 +64,7 @@ class PACEtomoSettings:
         return cls(**filtered_kwargs)
     
 
-    def get_tilt_scheme_loader(self):
+    def get_tilt_scheme(self):
         if self.useCustomTiltFile:
-            return tilt_schemes.load_tilt_scheme
-        return tilt_schemes.create_dose_symmetric_scheme
+            return tilt_schemes.load_tilt_scheme()
+        return tilt_schemes.create_dose_symmetric_scheme(self.startTilt,self.minTilt,self.maxTilt, self.step)

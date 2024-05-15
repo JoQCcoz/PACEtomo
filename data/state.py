@@ -42,6 +42,19 @@ class State:
         setattr(self,previous,self._current_tilt_angle)
         self._current_tilt_angle = angle
 
+    def set_starting_image_shift(self, ISX0:float, ISY0:float):
+        self._ISX0 = ISX0
+        self._ISY0 = ISY0
+
+    def set_starting_speciment_shift(self, SSX0:float, SSY0:float):
+        self._SSX0 = SSX0
+        self._SSY0 = SSY0
+
+    def set_starting_focus(self, focus0, minFocus0):
+        self._focus0 = focus0
+        self._position_focus = focus0
+        self._min_focus0 = minFocus0
+
     @property
     def previous_tilt_angle(self):
         previous = '_previous_tilt_angle_positive'

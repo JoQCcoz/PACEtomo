@@ -1,9 +1,10 @@
 from typing import List
 from math import ceil
 from pathlib import Path
+from ..data.tilt_scheme import TiltScheme
 
 
-def load_tilt_scheme_from_file(file:Path) -> List[float]:
+def load_tilt_scheme_from_file(file:Path) -> TiltScheme:
     def to_float(val:str):
         val = val.strip()
         if not val.lstrip('+-').isnumeric():
@@ -12,11 +13,11 @@ def load_tilt_scheme_from_file(file:Path) -> List[float]:
     
     with open(file, 'r') as f:
         lines = f.readlines()
-    return list(map(to_float,lines))
+    return TiltScheme(map(to_float,lines))
         
 
-def create_dose_symmetric_scheme(start_tilt, min_tilt, max_tilt, step) -> List[float]:
-    tilt_scheme = [start_tilt]
+def create_dose_symmetric_scheme(start_tilt, min_tilt, max_tilt, step) -> TiltScheme:
+    tilt_scheme = TiltScheme([start_tilt])
     branchsteps = max(max_tilt - start_tilt, abs(min_tilt - start_tilt)) / 2 / step
     plustilt = minustilt = start_tilt
     for _ in range(int(ceil(branchsteps))):

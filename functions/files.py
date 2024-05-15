@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Callable
 
-def parseTargets(targetFileLines:List[str]):
+def parseTargets(targetFileLines:List[str], printf:Callable=print):
     targets = []
     savedRun = []
     branch = None
@@ -11,10 +11,10 @@ def parseTargets(targetFileLines:List[str]):
             continue
         if line.startswith("_set") and len(col) == 4:
             if col[1] in globals():
-                # sem.Echo(f"WARNING: Read setting from tgts file and overwrite: {col[1]} = {col[3]}")
+                printf(f"WARNING: Read setting from tgts file and overwrite: {col[1]} = {col[3]}")
                 globals()[col[1]] = float(col[3])
             else:
-                # sem.Echo(f"WARNING: Attempted to overwrite {col[1]} but variable does not exist!")
+                printf(f"WARNING: Attempted to overwrite {col[1]} but variable does not exist!")
         elif line.startswith("_spos"):
             resume["sec"] = int(col[2].split(",")[0])
             resume["pos"] = int(col[2].split(",")[1])

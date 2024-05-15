@@ -1,9 +1,18 @@
 import copy
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field,
 from typing import get_type_hints, List
 from .settings import PACEtomoSettings
 from ..functions import calculations # scale_tilt, calc_z0, correct_focus, is_approaching_limit
 from ..scope.interface import Microscope
+
+
+def check_if_target_skipped(tgt, settings) -> bool:
+	if "skip" in tgt.keys() and tgt["skip"] == "True":
+		return True
+	if calculations.is_approaching_limit(SSX=tgt["SSX"],SSY=tgt["SSY"], limit=settings.imageShiftLimit - settings.alignLimit):
+		return True
+	return False
+
 
 @dataclass
 class PositionBranch:
@@ -82,28 +91,21 @@ class PositionBranch:
 @dataclass
 class Position:
 	_start: PositionBranch
-	_positive: PositionBranch
-	_negative: PositionBranch
+	_positive: PositionBranch = None
+	_negative: PositionBranch = None
 
 
 	@classmethod
-	def initialize(cls, tgt, settings:PACEtomoSettings, microscope:Microscope):
+	def initialize(cls, index, tgt, settings:PACEtomoSettings, microscope:Microscope):
 		start = PositionBranch()
 
-		skip = False
-		if "skip" in tgt.keys() and tgt["skip"] == "True":
-			# sem.Echo("WARNING: Target [" + str(len(position)).zfill(3) + "] was set to be skipped.")
-			skip = True
-		if calculations.is_approaching_limit(SSX=tgt["SSX"],SSY=tgt["SSY"], limit=settings.imageShiftLimit - settings.alignLimit):
-			skip = True
-
-		if skip: 
-			start.skip=True
+		if check_if_target_skipped(tgt,settings):
+			microscope.print("WARNING: Target [" + str(len(index)).zfill(3) + "] is set to be skipped.")
 			return cls(start=start,positive=start,negative=start)
 
 		tiltScaling = calculations.scale_tilt(pre_tilt=settings.pretilt,start_tilt=settings.startTilt,rotation=settings.rotation)	# stretch shifts from 0 tilt to startTilt
 
-		ISXset, ISYset, SSX, SSY = microscope.intitial_realignment(tgt)
+		ISXset, ISYset, SSX, SSY = microscope.intitial_realignment(tgt, tiltScaling)
 
 		z0_ini = calculations.calc_z0(SSX,SSY,pre_tilt=settings.pretilt,rotation=settings.rotation)
 		correctedFocus = calculations.correct_focus(position_focus=positionFocus,SSY=SSY,z0=z0_ini,start_tilt=settings.startTilt)
@@ -137,8 +139,14 @@ class GeoPosition(Position):
 
 @dataclass
 class AquisitionGroup:
-	tracking: TrackingPosition
-	positions: List[Position]
-	geopositions: List[GeoPosition]
+	_tracking: TrackingPosition = None
+	_positions: List[Position] = field(default_factory=list)
+	_geopositions: List[GeoPosition] = field(default_factory=list)
+
+	def add_tracking_position(self,target,settings,microscope):
+		self.tracking = TrackingPosition.initialize(target,settings,microscope)
+
+	def add_position(self,target,settings,microscope):
+		self.positions.append(Position.initialize(target,settings,microscope))
 
 
