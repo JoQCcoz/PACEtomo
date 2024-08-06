@@ -90,9 +90,10 @@ class PositionBranch:
 
 @dataclass
 class Position:
-	_start: PositionBranch
-	_positive: PositionBranch = None
-	_negative: PositionBranch = None
+	index: int
+	start: PositionBranch
+	positive: PositionBranch = None
+	negative: PositionBranch = None
 
 
 	@classmethod
@@ -101,7 +102,7 @@ class Position:
 
 		if check_if_target_skipped(tgt,settings):
 			microscope.print("WARNING: Target [" + str(len(index)).zfill(3) + "] is set to be skipped.")
-			return cls(start=start,positive=start,negative=start)
+			return cls(index=index,start=start,positive=start,negative=start)
 
 		tiltScaling = calculations.scale_tilt(pre_tilt=settings.pretilt,start_tilt=settings.startTilt,rotation=settings.rotation)	# stretch shifts from 0 tilt to startTilt
 
@@ -125,6 +126,8 @@ class Position:
 		positive.set_params(n0= positive.n0 - settings.taOffsetPos)
 		negative.set_params(n0= negative.n0 - settings.taOffsetNeg)
 
+		return cls(index=index,start=start,positive=positive,negative=negative)
+
 		positionFocus += settings.stepDefocus								# adds defocus step between targets and resets to initial defocus if minDefocus is surpassed
 		if positionFocus > minFocus0: 
 			positionFocus = focus0
@@ -143,10 +146,10 @@ class AquisitionGroup:
 	_positions: List[Position] = field(default_factory=list)
 	_geopositions: List[GeoPosition] = field(default_factory=list)
 
-	def add_tracking_position(self,target,settings,microscope):
-		self.tracking = TrackingPosition.initialize(target,settings,microscope)
+	def add_tracking_position(self,index, target,settings,microscope):
+		self.tracking = TrackingPosition.initialize(index,target,settings,microscope)
 
-	def add_position(self,target,settings,microscope):
-		self.positions.append(Position.initialize(target,settings,microscope))
+	def add_position(self,index,target,settings,microscope):
+		self.positions.append(Position.initialize(index,target,settings,microscope))
 
 

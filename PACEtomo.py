@@ -509,7 +509,7 @@ def main():
 		for ind, tgt in enumerate(targets):
 			if ind == 0:
 				position.add_tracking_position(ind,tgt,settings,microscope)
-			 
+			position.add_position(ind,tgt,settings,microscope)
 			# position.append([])
 			# position[-1].append(copy.deepcopy(posTemplate))
 
@@ -667,20 +667,23 @@ def main():
 	# 	startTime = sem.ReportClock()
 
 
-	### Tilt series
-	for i in range(startstep, int(np.ceil(branchsteps))):
-		for j in range(substep[0], 2):
-			plustilt += step
-			if all([pos[1]["skip"] for pos in position]): continue
-			sem.Echo("Tilt step " + str(i * 4 + j + 1) + " out of " + str(int((maxTilt - minTilt) / step + 1)) + " (" + str(plustilt) + " deg)...")
-			Tilt(plustilt, targets=targets,position=position)
-		for j in range(substep[1], 2):
-			minustilt -= step
-			if all([pos[2]["skip"] for pos in position]): continue
-			sem.Echo("Tilt step " + str(i * 4 + j + 3) + " out of " + str(int((maxTilt - minTilt) / step + 1)) + " (" + str(minustilt) + " deg)...")
-			Tilt(minustilt, targets=targets,position=position)
-		substep = [0, 0]										# reset substeps after recovery
-		if splitLog: sem.SaveLogOpenNew(navNote.split("_tgts")[0])
+	### Tilt serie
+	for i,tilt in enumerate(tilt_scheme):
+		microscope.print(f"Tilt step {i} out of {len(i)} ({tilt} deg)...")
+		Tilt(microscope,tilt_angle=tilt,targets=targets,position=AcquisitionGroup)
+	# for i in range(startstep, int(np.ceil(branchsteps))):
+	# 	for j in range(substep[0], 2):
+	# 		plustilt += step
+	# 		if all([pos[1]["skip"] for pos in position]): continue
+	# 		sem.Echo("Tilt step " + str(i * 4 + j + 1) + " out of " + str(int((maxTilt - minTilt) / step + 1)) + " (" + str(plustilt) + " deg)...")
+	# 		Tilt(plustilt, targets=targets,position=position)
+	# 	for j in range(substep[1], 2):
+	# 		minustilt -= step
+	# 		if all([pos[2]["skip"] for pos in position]): continue
+	# 		sem.Echo("Tilt step " + str(i * 4 + j + 3) + " out of " + str(int((maxTilt - minTilt) / step + 1)) + " (" + str(minustilt) + " deg)...")
+	# 		Tilt(minustilt, targets=targets,position=position)
+	# 	substep = [0, 0]										# reset substeps after recovery
+		# if splitLog: sem.SaveLogOpenNew(navNote.split("_tgts")[0])
 
 	### Finish
 	sem.TiltTo(0)
